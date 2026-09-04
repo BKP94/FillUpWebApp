@@ -1504,9 +1504,30 @@ select {
 textarea {
   resize: vertical;
 }
-input[type='datetime-local'] {
+.datetime-field {
+  display: block;
+  margin-top: 7px;
+  padding: 0 12px;
+  background: var(--input);
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+}
+.datetime-field:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+/* iOS adds native date input padding to width: 100% (WebKit bug 301648).
+   Keep the horizontal padding and border on the wrapper instead. */
+.datetime-field input[type='datetime-local'] {
+  margin: 0;
+  padding: 10px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  min-height: 43px;
   min-width: 0;
   max-width: 100%;
+  outline: none;
 }
 input[type='number'] {
   appearance: textfield;
@@ -2354,6 +2375,9 @@ input::-webkit-inner-spin-button {
   textarea {
     font-size: 16px;
     min-height: 48px;
+  }
+  .datetime-field input[type='datetime-local'] {
+    min-height: 46px;
   }
   .form-content label {
     font-size: 12px;

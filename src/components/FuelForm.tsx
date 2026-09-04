@@ -123,12 +123,14 @@ export function FuelForm({
         </div>
         <label>
           วันที่และเวลา
-          <input
-            name="date"
-            type="datetime-local"
-            defaultValue={inputDate(record ? new Date(record.date) : new Date())}
-            required
-          />
+          <span className="datetime-field">
+            <input
+              name="date"
+              type="datetime-local"
+              defaultValue={inputDate(record ? new Date(record.date) : new Date())}
+              required
+            />
+          </span>
         </label>
         <label>
           เลขไมล์ (km)
