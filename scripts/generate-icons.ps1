@@ -6,9 +6,15 @@ foreach ($spec in @(@('icon-192.png', 192), @('icon-512.png', 512), @('icon-mask
   $bitmap = New-Object System.Drawing.Bitmap($size, $size)
   $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
   $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-  $graphics.Clear([System.Drawing.ColorTranslator]::FromHtml('#087f6d'))
+  $graphics.Clear([System.Drawing.ColorTranslator]::FromHtml('#0056a6'))
   $scale = $size / 64.0
   $graphics.ScaleTransform($scale, $scale)
+  $skyBrush = New-Object System.Drawing.SolidBrush([System.Drawing.ColorTranslator]::FromHtml('#27a9e1'))
+  $redBrush = New-Object System.Drawing.SolidBrush([System.Drawing.ColorTranslator]::FromHtml('#d92338'))
+  $graphics.FillRectangle($skyBrush, 0, 56, 64, 8)
+  $graphics.FillRectangle($redBrush, 40, 56, 24, 8)
+  $skyBrush.Dispose()
+  $redBrush.Dispose()
   $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::White, 3.8)
   $pen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
   $pen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
@@ -29,7 +35,7 @@ foreach ($spec in @(@('icon-192.png', 192), @('icon-512.png', 512), @('icon-mask
   $graphics.DrawLine($pen, 54, 25, 47, 18)
   $graphics.DrawLine($pen, 50, 21, 50, 29)
   $graphics.DrawLine($pen, 50, 29, 54, 29)
-  $brush = New-Object System.Drawing.SolidBrush([System.Drawing.ColorTranslator]::FromHtml('#b1e4c8'))
+  $brush = New-Object System.Drawing.SolidBrush([System.Drawing.ColorTranslator]::FromHtml('#70d4ff'))
   $graphics.FillRectangle($brush, 23, 22, 12, 4)
   $destination = Join-Path $projectRoot ('public/' + $spec[0])
   $bitmap.Save($destination, [System.Drawing.Imaging.ImageFormat]::Png)
