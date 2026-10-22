@@ -1,9 +1,24 @@
-import { useId } from 'react'
+import { useEffect, useState } from 'react'
 import { number } from '../utils/format'
 
 export interface ChartPoint {
   label: string
   value: number
+}
+function useWidth(fallback: number) {
+  const [element, setElement] = useState<HTMLDivElement | null>(null)
+  const [width, setWidth] = useState(fallback)
+  useEffect(() => {
+    if (!element || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return
+      const next = Math.round(entry.contentRect.width)
+      if (next > 0) setWidth(next)
+    })
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [element])
+  return [setElement, width] as const
 }
 export function Chart({
   points,
@@ -16,23 +31,22 @@ export function Chart({
   unit: string
   bars?: boolean
 }) {
-  const id = useId().replaceAll(':', '')
+  const [ref, width] = useWidth(600)
   if (!points.length)
     return (
       <div className="chart-empty">
-        <div className="chart-grid" />
         <p>ยังมีข้อมูลไม่เพียงพอ</p>
         <span>กราฟจะแสดงเมื่อมีข้อมูลที่คำนวณได้</span>
       </div>
     )
-  const max = Math.max(...points.map((point) => point.value), 1) * 1.2
-  const width = 600,
-    height = 190,
-    left = 45,
-    right = 15,
-    top = 15,
-    bottom = 28
-  const innerWidth = width - left - right,
+  const compact = width < 480
+  const max = Math.max(...points.map((point) => point.value), 1) * 1.15
+  const height = compact ? 180 : 210,
+    left = compact ? 40 : 52,
+    right = 12,
+    top = 14,
+    bottom = 30
+  const innerWidth = Math.max(width - left - right, 1),
     innerHeight = height - top - bottom
   const x = (index: number) =>
     left +
@@ -40,15 +54,11 @@ export function Chart({
       innerWidth
   const y = (value: number) => top + innerHeight * (1 - value / max)
   const path = points.map((point, index) => `${index ? 'L' : 'M'}${x(index)},${y(point.value)}`).join(' ')
+  const maxLabels = Math.max(2, Math.min(6, Math.floor(innerWidth / 96)))
+  const labelEvery = Math.max(1, Math.ceil(points.length / maxLabels))
   return (
-    <div className="chart">
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
-        <defs>
-          <linearGradient id={id} x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
+    <div className="chart" ref={ref}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
         {[0, 0.5, 1].map((fraction) => (
           <g key={fraction}>
             <line
@@ -56,42 +66,46 @@ export function Chart({
               x2={width - right}
               y1={y(max * fraction)}
               y2={y(max * fraction)}
-              className="grid-line"
+              className={fraction ? 'grid-line' : 'base-line'}
             />
-            <text x={left - 9} y={y(max * fraction) + 4} textAnchor="end">
+            <text x={left - 8} y={y(max * fraction) + 4} textAnchor="end">
               {number(max * fraction, max < 10 ? 1 : 0)}
             </text>
           </g>
         ))}
         {bars ? (
-          points.map((point, index) => (
-            <rect
-              key={index}
-              x={x(index) - (innerWidth / points.length) * 0.28}
-              y={y(point.value)}
-              width={(innerWidth / points.length) * 0.56}
-              height={y(0) - y(point.value)}
-              rx="5"
-              fill="var(--accent)"
-            >
-              <title>
-                {point.label}: {number(point.value, 2)} {unit}
-              </title>
-            </rect>
-          ))
+          points.map((point, index) => {
+            const slot = innerWidth / points.length
+            return (
+              <rect
+                key={index}
+                className="chart-bar"
+                x={x(index) - slot * 0.3}
+                y={y(point.value)}
+                width={slot * 0.6}
+                height={y(0) - y(point.value)}
+                rx="2"
+              >
+                <title>
+                  {point.label}: {number(point.value, 2)} {unit}
+                </title>
+              </rect>
+            )
+          })
         ) : (
           <>
-            <path d={`${path} L${x(points.length - 1)},${y(0)} L${x(0)},${y(0)} Z`} fill={`url(#${id})`} />
-            <path d={path} fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinejoin="round" />
+            <path
+              className="chart-area"
+              d={`${path} L${x(points.length - 1)},${y(0)} L${x(0)},${y(0)} Z`}
+            />
+            <path className="chart-line" d={path} />
             {points.map((point, index) => (
               <circle
                 key={index}
+                className={index === points.length - 1 ? 'chart-dot latest' : 'chart-dot'}
                 cx={x(index)}
                 cy={y(point.value)}
-                r="4"
-                fill="var(--accent)"
-                stroke="var(--card)"
-                strokeWidth="2"
+                r={index === points.length - 1 ? 5 : 3.5}
               >
                 <title>
                   {point.label}: {number(point.value, 2)} {unit}
@@ -102,13 +116,21 @@ export function Chart({
         )}
         {points.map(
           (point, index) =>
-            (index === 0 || index === points.length - 1 || (points.length < 7 && index % 2 === 0)) && (
+            (index === points.length - 1 || index % labelEvery === 0) &&
+            !(index !== points.length - 1 && points.length - 1 - index < labelEvery * 0.75) && (
               <text
                 key={index}
+                className="axis-label"
                 x={x(index)}
-                y={height - 7}
+                y={height - 8}
                 textAnchor={
-                  index === 0 && !bars ? 'start' : index === points.length - 1 && !bars ? 'end' : 'middle'
+                  bars || points.length === 1
+                    ? 'middle'
+                    : index === 0
+                      ? 'start'
+                      : index === points.length - 1
+                        ? 'end'
+                        : 'middle'
                 }
               >
                 {point.label}
@@ -122,8 +144,8 @@ export function Chart({
           <caption>{label}</caption>
           <thead>
             <tr>
-              <th>วันที่ / เดือน</th>
-              <th>{unit}</th>
+              <th scope="col">วันที่ / เดือน</th>
+              <th scope="col">{unit}</th>
             </tr>
           </thead>
           <tbody>

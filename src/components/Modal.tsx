@@ -82,8 +82,8 @@ export function ConfirmDialog({
       }}
     >
       <div className="modal-body">
-        <div className="warning-symbol">
-          <TriangleAlert />
+        <div className="warning-symbol" aria-hidden="true">
+          <TriangleAlert size={22} />
         </div>
         <p className="confirmation-copy">{confirmation.description}</p>
         {error && (
@@ -97,7 +97,7 @@ export function ConfirmDialog({
           ยกเลิก
         </button>
         <button
-          className={`button ${confirmation.danger === false ? 'primary' : 'danger'}`}
+          className={`button ${confirmation.danger === false ? 'primary' : 'danger-solid'}`}
           disabled={busy}
           onClick={() => {
             void confirm()

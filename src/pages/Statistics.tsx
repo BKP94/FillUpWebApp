@@ -1,8 +1,7 @@
-import { Banknote, Droplets, Gauge, Medal, Route, TrendingDown } from 'lucide-react'
 import type { FuelRecord } from '../models'
 import { statistics, chronological } from '../services/calculations'
 import { baht, dateLabel, monthLabel, number } from '../utils/format'
-import { Metric } from '../components/Common'
+import { Metric, PageHeading, ReceiptRow } from '../components/Common'
 import { Chart } from '../components/Chart'
 
 export function Statistics({ records }: { records: FuelRecord[] }) {
@@ -10,33 +9,29 @@ export function Statistics({ records }: { records: FuelRecord[] }) {
   const economy = (value: number | null) => (value === null ? '—' : number(value, 1))
   return (
     <>
-      <div className="page-heading">
-        <div>
-          <div className="eyebrow">เข้าใจรถ ผ่านตัวเลข</div>
-          <h1>
-            สถิติการเดินทาง<span className="heading-dot">.</span>
-          </h1>
-          <p>ภาพรวมทั้งหมดของรถที่เลือก · {records.length} รายการ</p>
-        </div>
-        <span className="month-chip">ตั้งแต่เริ่มบันทึก</span>
-      </div>
-      <div className="stats-primary">
-        <Metric label="อัตราสิ้นเปลืองเฉลี่ย" value={economy(stats.average)} unit="km/L" icon={Gauge} />
-        <Metric label="ประหยัดที่สุด" value={economy(stats.best)} unit="km/L" icon={Medal} />
-        <Metric label="สิ้นเปลืองที่สุด" value={economy(stats.worst)} unit="km/L" icon={TrendingDown} />
-      </div>
+      <PageHeading
+        title="สถิติการเดินทาง"
+        description={`ภาพรวมทั้งหมดของรถที่เลือก · ${records.length} รายการ`}
+      >
+        <span className="chip">ตั้งแต่เริ่มบันทึก</span>
+      </PageHeading>
+      <section className="cluster stats-primary" aria-label="อัตราสิ้นเปลือง">
+        <Metric size="l" label="อัตราสิ้นเปลืองเฉลี่ย" value={economy(stats.average)} unit="km/L" />
+        <Metric label="ประหยัดที่สุด" value={economy(stats.best)} unit="km/L" />
+        <Metric label="สิ้นเปลืองที่สุด" value={economy(stats.worst)} unit="km/L" />
+      </section>
       {stats.average === null && (
         <p className="info-note">
           ยังมีข้อมูลไม่เพียงพอ — ต้องมีการเติมเต็มถังอย่างน้อย 2 ครั้งเพื่อคำนวณ km/L
         </p>
       )}
-      <section className="card chart-panel">
-        <div className="section-heading inside">
+      <section className="panel chart-panel">
+        <div className="panel-heading">
           <div>
             <h2>อัตราสิ้นเปลืองแต่ละครั้ง</h2>
             <p>30 ช่วงเติมเต็มถังล่าสุด · km/L</p>
           </div>
-          <span className="badge green">วิธีเต็มถัง</span>
+          <span className="badge full">วิธีเต็มถัง</span>
         </div>
         <Chart
           unit="km/L"
@@ -46,25 +41,30 @@ export function Statistics({ records }: { records: FuelRecord[] }) {
             .map((item) => ({ label: dateLabel(item.date), value: item.kmPerLiter }))}
         />
       </section>
-      <div className="stats-secondary">
-        <Metric label="ค่าใช้จ่ายทั้งหมด" value={baht(stats.totalCost)} icon={Banknote} />
-        <Metric label="น้ำมันทั้งหมด" value={number(stats.totalLiters, 2)} unit="L" icon={Droplets} />
-        <Metric label="ระยะทางที่บันทึก" value={number(stats.distance)} unit="km" icon={Route} />
-        <Metric
-          label="ราคาน้ำมันเฉลี่ย"
-          value={stats.averagePrice === null ? '—' : number(stats.averagePrice, 2)}
-          unit="฿/L"
-        />
-        <Metric
-          label="ค่าใช้จ่ายต่อกิโลเมตร"
-          value={stats.costPerKm === null ? '—' : number(stats.costPerKm, 2)}
-          unit="฿/km"
-        />
-        <Metric label="จำนวนครั้งที่เติม" value={number(records.length)} unit="ครั้ง" />
-      </div>
+      <section className="panel stats-secondary" aria-labelledby="totals-heading">
+        <div className="panel-heading">
+          <h2 id="totals-heading">ยอดรวมตั้งแต่เริ่มบันทึก</h2>
+        </div>
+        <dl className="receipt-rows two-up">
+          <ReceiptRow label="ค่าใช้จ่ายทั้งหมด" value={baht(stats.totalCost)} />
+          <ReceiptRow label="น้ำมันทั้งหมด" value={number(stats.totalLiters, 2)} unit="L" />
+          <ReceiptRow label="ระยะทางที่บันทึก" value={number(stats.distance)} unit="km" />
+          <ReceiptRow
+            label="ราคาน้ำมันเฉลี่ย"
+            value={stats.averagePrice === null ? '—' : number(stats.averagePrice, 2)}
+            unit="฿/L"
+          />
+          <ReceiptRow
+            label="ค่าใช้จ่ายต่อกิโลเมตร"
+            value={stats.costPerKm === null ? '—' : number(stats.costPerKm, 2)}
+            unit="฿/km"
+          />
+          <ReceiptRow label="จำนวนครั้งที่เติม" value={number(records.length)} unit="ครั้ง" />
+        </dl>
+      </section>
       <div className="two-column">
-        <section className="card chart-panel">
-          <div className="section-heading inside">
+        <section className="panel chart-panel">
+          <div className="panel-heading">
             <div>
               <h2>ค่าใช้จ่ายรายเดือน</h2>
               <p>12 เดือนที่มีการเติมล่าสุด · บาท</p>
@@ -79,8 +79,8 @@ export function Statistics({ records }: { records: FuelRecord[] }) {
               .map((item) => ({ label: monthLabel(item.month), value: item.amount }))}
           />
         </section>
-        <section className="card chart-panel">
-          <div className="section-heading inside">
+        <section className="panel chart-panel">
+          <div className="panel-heading">
             <div>
               <h2>ราคาน้ำมันตามเวลา</h2>
               <p>30 รายการล่าสุด · บาทต่อลิตร</p>
@@ -95,7 +95,7 @@ export function Statistics({ records }: { records: FuelRecord[] }) {
           />
         </section>
       </div>
-      <details className="calculation-note card">
+      <details className="calculation-note panel">
         <summary>ตัวเลขเหล่านี้คำนวณอย่างไร?</summary>
         <p>
           km/L = ระยะทางระหว่างการเติมเต็มถัง ÷ น้ำมันทุกครั้งหลังเต็มถังก่อนหน้า

@@ -9,7 +9,7 @@ export const dateLabel = (value: string, options?: Intl.DateTimeFormatOptions) =
   )
 export const monthKey = (value: string) => {
   const date = new Date(value)
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+  return `${String(date.getFullYear()).padStart(4, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 export const monthLabel = (key: string) =>
   new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' }).format(new Date(`${key}-01T12:00:00`))

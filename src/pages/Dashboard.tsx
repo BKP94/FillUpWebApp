@@ -1,19 +1,8 @@
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Banknote,
-  Droplets,
-  Fuel,
-  Gauge,
-  Plus,
-  Route,
-  Leaf,
-  ShieldCheck,
-} from 'lucide-react'
+import { ArrowRight, Info, Plus } from 'lucide-react'
 import type { FuelRecord, Vehicle } from '../models'
 import { statistics, chronological } from '../services/calculations'
 import { baht, dateLabel, monthKey, monthLabel, number } from '../utils/format'
-import { EmptyState, Metric, RecordRow } from '../components/Common'
+import { EmptyState, Metric, Odometer, PageHeading, ReceiptRow, RecordRow } from '../components/Common'
 import { Chart } from '../components/Chart'
 
 export function Dashboard({
@@ -35,56 +24,36 @@ export function Dashboard({
   const latestOdometer = chronological(records).at(-1)?.odometer ?? vehicle.initialOdometer
   return (
     <>
-      <div className="page-heading">
-        <div>
-          <div className="eyebrow">ทุกการเดินทาง เริ่มที่ความเข้าใจ</div>
-          <h1>
-            ภาพรวมของคุณ<span className="heading-dot">.</span>
-          </h1>
-          <p>บันทึกวันนี้ เพื่อการเดินทางที่คุ้มค่ากว่า</p>
-        </div>
-        <button className="button primary desktop-action" onClick={addFuel}>
-          <Plus size={19} /> เติมน้ำมัน
+      <PageHeading
+        title="ภาพรวมของคุณ"
+        description="บันทึกวันนี้ เพื่อการเดินทางที่คุ้มค่ากว่า"
+      >
+        <button className="button signal desktop-action" onClick={addFuel}>
+          <Plus size={19} aria-hidden="true" /> เติมน้ำมัน
         </button>
-      </div>
-      <div className="dashboard-top">
-        <section className="vehicle-hero">
+      </PageHeading>
+      <section className="cluster" aria-label="หน้าปัดเลขไมล์และอัตราสิ้นเปลือง">
+        <div className="vehicle-hero">
           <div className="hero-top">
-            <span className="hero-tag">
-              <span /> รถที่กำลังใช้งาน
-            </span>
+            <span className="hero-tag">รถที่กำลังใช้งาน</span>
             <span className="hero-fuel">{vehicle.fuelType}</span>
           </div>
           <h2>{vehicle.name}</h2>
           <p>
-            {vehicle.brand} {vehicle.model} <span>·</span> {vehicle.year}
+            {vehicle.brand} {vehicle.model} · {vehicle.year}
+            {vehicle.licensePlate && <span className="plate">{vehicle.licensePlate}</span>}
           </p>
           <div className="hero-odometer">
             <span>เลขไมล์ปัจจุบัน</span>
-            <strong>
-              {number(latestOdometer, latestOdometer % 1 ? 1 : 0)}
-              <small>km</small>
-            </strong>
+            <Odometer value={latestOdometer} />
           </div>
-          <div className="hero-road" aria-hidden="true">
-            <div />
-            <div />
-            <div />
-          </div>
-          <Gauge className="hero-gauge" size={155} strokeWidth={0.65} />
-          <div className="hero-footer">
-            <span>
-              <ShieldCheck size={15} /> ข้อมูลอยู่บนอุปกรณ์ของคุณ
-            </span>
-            <ArrowUpRight size={19} />
-          </div>
-        </section>
+        </div>
         <div className="economy-metrics">
           <Metric
+            size="l"
             label="อัตราสิ้นเปลืองเฉลี่ย"
             value={stats.average === null ? '—' : number(stats.average, 1)}
             unit="km/L"
-            icon={Leaf}
             note={
               stats.average === null
                 ? 'ยังมีข้อมูลไม่เพียงพอ'
@@ -95,57 +64,35 @@ export function Dashboard({
             label="อัตราสิ้นเปลืองล่าสุด"
             value={stats.latest === null ? '—' : number(stats.latest, 1)}
             unit="km/L"
-            icon={Gauge}
             note={stats.latest === null ? 'บันทึกเต็มถัง 2 ครั้งเพื่อเริ่มคำนวณ' : 'คำนวณด้วยวิธีเติมเต็มถัง'}
           />
         </div>
-      </div>
-      <div className="section-heading">
-        <h2>เดือนนี้เป็นอย่างไร</h2>
-        <span className="month-chip">{monthLabel(monthKey(new Date().toISOString()))}</span>
-      </div>
-      <div className="monthly-grid">
-        <Metric label="ค่าใช้จ่าย" value={baht(stats.monthlyCost)} icon={Banknote} />
-        <Metric label="น้ำมันที่เติม" value={number(stats.monthlyLiters, 2)} unit="L" icon={Droplets} />
-        <Metric label="ระยะทางที่บันทึก" value={number(stats.monthlyDistance)} unit="km" icon={Route} />
-        <Metric label="จำนวนครั้งที่เติม" value={number(stats.monthlyCount)} unit="ครั้ง" icon={Fuel} />
-      </div>
-      <div className="dashboard-bottom">
-        <section className="card chart-panel">
-          <div className="section-heading inside">
-            <div>
-              <h2>ทุกถัง บอกอะไรได้มากกว่า</h2>
-              <p>อัตราสิ้นเปลือง 12 ช่วงล่าสุด · km/L</p>
-            </div>
-            <button
-              className="icon-button"
-              onClick={() => navigate('statistics')}
-              aria-label="ดูสถิติทั้งหมด"
-            >
-              <ArrowUpRight size={21} />
-            </button>
+      </section>
+      <div className="dashboard-grid">
+        <section className="panel month-receipt" aria-labelledby="month-heading">
+          <div className="panel-heading">
+            <h2 id="month-heading">เดือนนี้เป็นอย่างไร</h2>
+            <span className="chip">{monthLabel(monthKey(new Date().toISOString()))}</span>
           </div>
-          <Chart
-            label="อัตราสิ้นเปลืองล่าสุด"
-            unit="km/L"
-            points={stats.intervals
-              .slice(-12)
-              .map((item) => ({ label: dateLabel(item.date, { year: undefined }), value: item.kmPerLiter }))}
-          />
-          <div className="chart-footnote">
-            <span className="legend-dot" />
-            ยิ่ง km/L สูง ยิ่งเดินทางได้ไกลต่อลิตร
+          <dl className="receipt-rows">
+            <ReceiptRow label="น้ำมันที่เติม" value={number(stats.monthlyLiters, 2)} unit="L" />
+            <ReceiptRow label="ระยะทางที่บันทึก" value={number(stats.monthlyDistance)} unit="km" />
+            <ReceiptRow label="จำนวนครั้งที่เติม" value={number(stats.monthlyCount)} unit="ครั้ง" />
+          </dl>
+          <div className="receipt-total">
+            <span>ค่าใช้จ่าย</span>
+            <strong>{baht(stats.monthlyCost)}</strong>
           </div>
         </section>
-        <section className="card recent-panel">
-          <div className="section-heading inside">
-            <h2>เติมน้ำมันล่าสุด</h2>
+        <section className="panel recent-panel" aria-labelledby="recent-heading">
+          <div className="panel-heading">
+            <h2 id="recent-heading">เติมน้ำมันล่าสุด</h2>
             <button className="text-button" onClick={() => navigate('history')}>
-              ดูทั้งหมด <ArrowRight size={15} />
+              ดูทั้งหมด <ArrowRight size={16} aria-hidden="true" />
             </button>
           </div>
           {recent.length ? (
-            <div>
+            <div className="ledger">
               {recent.map((record) => (
                 <RecordRow
                   key={record.id}
@@ -163,18 +110,34 @@ export function Dashboard({
             />
           )}
         </section>
+        <section className="panel chart-panel wide" aria-labelledby="trend-heading">
+          <div className="panel-heading">
+            <div>
+              <h2 id="trend-heading">ทุกถัง บอกอะไรได้มากกว่า</h2>
+              <p>อัตราสิ้นเปลือง 12 ช่วงล่าสุด · km/L</p>
+            </div>
+            <button className="text-button" onClick={() => navigate('statistics')}>
+              ดูสถิติทั้งหมด <ArrowRight size={16} aria-hidden="true" />
+            </button>
+          </div>
+          <Chart
+            label="อัตราสิ้นเปลืองล่าสุด"
+            unit="km/L"
+            points={stats.intervals
+              .slice(-12)
+              .map((item) => ({ label: dateLabel(item.date, { year: undefined }), value: item.kmPerLiter }))}
+          />
+          <p className="chart-footnote">ยิ่ง km/L สูง ยิ่งเดินทางได้ไกลต่อลิตร</p>
+        </section>
       </div>
-      <div className="tip-card">
-        <span className="small-icon">
-          <Leaf size={21} />
+      <p className="tip-line">
+        <Info size={18} aria-hidden="true" />
+        <span>
+          <strong>เคล็ดลับ:</strong> เติมเต็มถังและบันทึกเลขไมล์ทุกครั้ง หากเติมไม่เต็มถัง ก็ยังบันทึกได้ตามปกติ
         </span>
-        <div>
-          <strong>เคล็ดลับเล็ก ๆ เพื่อข้อมูลที่แม่นยำ</strong>
-          <p>เติมเต็มถังและบันทึกเลขไมล์ทุกครั้ง หากเติมไม่เต็มถัง ก็ยังบันทึกได้ตามปกติ</p>
-        </div>
-      </div>
-      <button className="button primary mobile-add" onClick={addFuel}>
-        <Plus size={22} /> เติมน้ำมัน
+      </p>
+      <button className="button signal mobile-add" onClick={addFuel}>
+        <Plus size={22} aria-hidden="true" /> เติมน้ำมัน
       </button>
     </>
   )

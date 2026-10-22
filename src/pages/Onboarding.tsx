@@ -1,4 +1,4 @@
-import { ArrowUpRight, Check, Fuel, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Check, ShieldCheck } from 'lucide-react'
 import type { Vehicle } from '../models'
 import { VehicleForm } from '../components/VehicleForm'
 export function Onboarding({
@@ -11,41 +11,35 @@ export function Onboarding({
   return (
     <section className="onboarding">
       <div className="onboarding-story">
-        <span className="eyebrow">บันทึกง่าย เข้าใจทุกถัง</span>
         <h1>
-          ยินดีต้อนรับสู่
-          <br />
-          <span>FillUp.</span>
+          ยินดีต้อนรับสู่ <span className="brand-word">FillUp<span className="brand-dot">.</span></span>
         </h1>
-        <p>
-          เพื่อนร่วมทางที่ช่วยให้คุณเข้าใจ
-          <br />
-          การใช้น้ำมันและค่าใช้จ่ายของรถ
-        </p>
-        <div className="welcome-art" aria-hidden="true">
-          <div className="art-orbit" />
-          <Fuel size={86} strokeWidth={1.2} />
-          <span className="art-check">
-            <Check size={25} />
-          </span>
-          <span className="art-leaf">km/L</span>
-        </div>
-        <div className="welcome-benefits">
-          <span>
-            <Check size={16} /> ใช้งานออฟไลน์ได้
-          </span>
-          <span>
-            <Check size={16} /> ไม่มีค่าใช้จ่าย
-          </span>
-          <span>
-            <Check size={16} /> ไม่ต้องสมัครสมาชิก
-          </span>
-        </div>
+        <p>เพื่อนร่วมทางที่ช่วยให้คุณเข้าใจการใช้น้ำมันและค่าใช้จ่ายของรถ</p>
+        <dl className="receipt-rows welcome-benefits">
+          <div className="receipt-row">
+            <dt>ใช้งานออฟไลน์ได้</dt>
+            <dd>
+              <Check size={18} role="img" aria-label="รองรับ" />
+            </dd>
+          </div>
+          <div className="receipt-row">
+            <dt>ไม่มีค่าใช้จ่าย</dt>
+            <dd>
+              <Check size={18} role="img" aria-label="รองรับ" />
+            </dd>
+          </div>
+          <div className="receipt-row">
+            <dt>ไม่ต้องสมัครสมาชิก</dt>
+            <dd>
+              <Check size={18} role="img" aria-label="รองรับ" />
+            </dd>
+          </div>
+        </dl>
         <p className="welcome-privacy">
-          <ShieldCheck size={17} /> ข้อมูลทั้งหมดอยู่บนอุปกรณ์ของคุณ
+          <ShieldCheck size={17} aria-hidden="true" /> ข้อมูลทั้งหมดอยู่บนอุปกรณ์ของคุณ
         </p>
       </div>
-      <div className="card onboarding-form">
+      <div className="panel onboarding-form">
         <div className="onboarding-title">
           <span className="step-label">เริ่มต้นในขั้นตอนเดียว</span>
           <h2>เพิ่มรถคันแรกของคุณ</h2>
@@ -53,7 +47,7 @@ export function Onboarding({
         </div>
         <VehicleForm onSave={saveVehicle} onboarding />
         <button className="text-button restore-first" onClick={onRestore}>
-          มีข้อมูลเดิมอยู่แล้ว? นำเข้าไฟล์สำรอง <ArrowUpRight size={15} />
+          มีข้อมูลเดิมอยู่แล้ว? นำเข้าไฟล์สำรอง <ArrowRight size={15} aria-hidden="true" />
         </button>
       </div>
     </section>

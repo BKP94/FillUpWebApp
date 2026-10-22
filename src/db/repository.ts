@@ -108,10 +108,27 @@ export class Repository {
     await tx.done
     this.onChange()
   }
-  async deleteVehicle(id: string) {
+  async deleteVehicle(
+    id: string,
+    expected: { updatedAt: string; records: Pick<FuelRecord, 'id' | 'updatedAt'>[] },
+  ) {
     const tx = (await this.open()).transaction(stores, 'readwrite')
-    const records = await tx.objectStore('records').index('by-vehicle').getAllKeys(id)
-    for (const key of records) await tx.objectStore('records').delete(key)
+    const current = await tx.objectStore('vehicles').get(id)
+    const records = await tx.objectStore('records').index('by-vehicle').getAll(id)
+    const expectedRecords = new Map(expected.records.map((record) => [record.id, record.updatedAt]))
+    // Compare the confirmed snapshot inside the same transaction as the cascade delete.
+    if (
+      !current ||
+      current.updatedAt !== expected.updatedAt ||
+      records.length !== expectedRecords.size ||
+      records.some((record) => expectedRecords.get(record.id) !== record.updatedAt)
+    ) {
+      await tx.done
+      throw new Error(
+        'ข้อมูลรถหรือประวัติมีการเปลี่ยนแปลงแล้ว ยังไม่ได้ลบข้อมูล กรุณากดยกเลิกแล้วเปิดการลบรถใหม่เพื่อตรวจสอบข้อมูลล่าสุด',
+      )
+    }
+    for (const record of records) await tx.objectStore('records').delete(record.id)
     await tx.objectStore('vehicles').delete(id)
     const settings = (await tx.objectStore('settings').get('app')) ?? { ...defaultSettings }
     if (settings.activeVehicleId === id) {

@@ -18,6 +18,7 @@ import { createBackup, createCsv, downloadFile, parseBackup } from '../services/
 import { errorMessage } from '../hooks/useAppData'
 import type { Confirmation } from '../components/Modal'
 import { MAX_BACKUP_BYTES } from '../models/limits'
+import { PageHeading } from '../components/Common'
 
 export function Settings({
   data,
@@ -93,18 +94,10 @@ export function Settings({
   }
   return (
     <>
-      <div className="page-heading">
-        <div>
-          <div className="eyebrow">ปรับให้เป็นคุณ</div>
-          <h1>
-            ตั้งค่า<span className="heading-dot">.</span>
-          </h1>
-          <p>ข้อมูลของคุณ อยู่ในการดูแลของคุณ</p>
-        </div>
-      </div>
+      <PageHeading title="ตั้งค่า" description="ข้อมูลของคุณ อยู่ในการดูแลของคุณ" />
       <div className="settings-grid">
         <div>
-          <section className="card settings-section">
+          <section className="panel settings-section">
             <h2>การแสดงผล</h2>
             <p>เลือกหน้าตาที่สบายตาสำหรับคุณ</p>
             <div className="theme-options">
@@ -121,41 +114,41 @@ export function Settings({
                   aria-pressed={data.settings.theme === value}
                   onClick={() => updateSettings({ theme: value })}
                 >
-                  <Icon size={22} />
+                  <Icon size={20} aria-hidden="true" />
                   <span>{label}</span>
                 </button>
               ))}
             </div>
           </section>
-          <section className="card settings-section">
+          <section className="panel settings-section">
             <h2>สำรองและย้ายข้อมูล</h2>
             <p>
               รถ {data.vehicles.length} คัน · ประวัติการเติม {data.records.length} รายการ
             </p>
             <div className="settings-rows">
               <button onClick={() => exportFile(false)}>
-                <ArrowDownToLine />
+                <ArrowDownToLine size={20} aria-hidden="true" />
                 <span>
                   <strong>ส่งออกไฟล์สำรอง JSON</strong>
                   <small>เก็บข้อมูลครบ พร้อมกู้คืนในภายหลัง</small>
                 </span>
-                <ChevronRight />
+                <ChevronRight size={20} aria-hidden="true" />
               </button>
               <button disabled={importing} onClick={() => input.current?.click()}>
-                <Upload />
+                <Upload size={20} aria-hidden="true" />
                 <span>
                   <strong>{importing ? 'กำลังตรวจสอบไฟล์…' : 'นำเข้าไฟล์สำรอง JSON'}</strong>
                   <small>แทนที่ข้อมูลปัจจุบันด้วยไฟล์สำรอง</small>
                 </span>
-                <ChevronRight />
+                <ChevronRight size={20} aria-hidden="true" />
               </button>
               <button onClick={() => exportFile(true)}>
-                <FileSpreadsheet />
+                <FileSpreadsheet size={20} aria-hidden="true" />
                 <span>
                   <strong>ส่งออกประวัติ CSV</strong>
                   <small>รถทุกคัน · รองรับภาษาไทยใน Excel</small>
                 </span>
-                <ChevronRight />
+                <ChevronRight size={20} aria-hidden="true" />
               </button>
             </div>
             <input
@@ -175,7 +168,7 @@ export function Settings({
               </p>
             )}
           </section>
-          <section className="card settings-section">
+          <section className="panel settings-section">
             <h2>พื้นที่จัดเก็บ</h2>
             <div className="settings-rows">
               <button
@@ -184,7 +177,7 @@ export function Settings({
                   void requestStorage()
                 }}
               >
-                <Database />
+                <Database size={20} aria-hidden="true" />
                 <span>
                   <strong>
                     {persistent
@@ -195,7 +188,7 @@ export function Settings({
                   </strong>
                   <small>ช่วยลดโอกาสที่เบราว์เซอร์จะล้างข้อมูล</small>
                 </span>
-                <ChevronRight />
+                <ChevronRight size={20} aria-hidden="true" />
               </button>
               <button
                 className="danger-text"
@@ -211,24 +204,20 @@ export function Settings({
                   })
                 }
               >
-                <Trash2 />
+                <Trash2 size={20} aria-hidden="true" />
                 <span>
                   <strong>ลบข้อมูลทั้งหมด</strong>
                   <small>ไม่สามารถกู้คืนได้หากไม่มีไฟล์สำรอง</small>
                 </span>
-                <ChevronRight />
+                <ChevronRight size={20} aria-hidden="true" />
               </button>
             </div>
           </section>
         </div>
         <div>
           <section className="privacy-card">
-            <ShieldCheck size={34} strokeWidth={1.5} />
-            <h2>
-              เรื่องของรถคุณ
-              <br />
-              เป็นเรื่องของคุณ
-            </h2>
+            <ShieldCheck size={28} strokeWidth={1.6} aria-hidden="true" />
+            <h2>เรื่องของรถคุณ เป็นเรื่องของคุณ</h2>
             <p>FillUp ไม่ส่งข้อมูลรถหรือประวัติการเติมน้ำมันออกจากอุปกรณ์ของคุณ</p>
             <ul>
               <li>ไม่มีบัญชีผู้ใช้หรือระบบล็อกอิน</li>
@@ -236,12 +225,12 @@ export function Settings({
               <li>ใช้งานได้แม้ไม่มีอินเทอร์เน็ต</li>
             </ul>
             <div className="privacy-status">
-              <span />
+              <span className="status-dot" aria-hidden="true" />
               {offlineReady ? 'พร้อมใช้งานออฟไลน์' : 'เปิดออนไลน์ครั้งแรกเพื่อเตรียมออฟไลน์'}
             </div>
           </section>
-          <section className="card settings-section install-guide">
-            <Smartphone size={25} />
+          <section className="panel settings-section install-guide">
+            <Smartphone size={22} aria-hidden="true" />
             <h2>ติดตั้ง FillUp บน iPhone</h2>
             <p>เปิดเว็บไซต์นี้ใน Safari แล้วทำตามนี้</p>
             <ol>
@@ -252,7 +241,7 @@ export function Settings({
             <span className="field-hint">ไม่ต้องใช้ App Store หรือบัญชีนักพัฒนา Apple</span>
           </section>
           <div className="about-line">
-            <Fuel size={18} />
+            <Fuel size={18} aria-hidden="true" />
             <strong>FillUp</strong>
             <span>เวอร์ชัน 1.0.0 · ทำให้ทุกถังคุ้มค่า</span>
           </div>

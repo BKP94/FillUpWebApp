@@ -55,9 +55,7 @@ export function VehicleForm({
       <div className={onboarding ? 'form-content' : 'modal-body form-content'}>
         {!onboarding && (
           <div className="form-intro">
-            <span className="small-icon">
-              <CarFront size={21} />
-            </span>
+            <CarFront size={18} aria-hidden="true" />
             <p>
               รายละเอียดรถของคุณ<span>แยกประวัติและค่าใช้จ่ายสำหรับรถแต่ละคัน</span>
             </p>
@@ -154,7 +152,7 @@ export function VehicleForm({
       <div className={onboarding ? 'onboarding-submit' : 'modal-footer'}>
         <button className="button primary full-width" disabled={busy} type="submit">
           {busy ? 'กำลังบันทึก…' : onboarding ? 'เริ่มต้นใช้งาน' : 'บันทึกข้อมูลรถ'}
-          {!busy && <ArrowRight size={18} />}
+          {!busy && <ArrowRight size={18} aria-hidden="true" />}
         </button>
       </div>
     </form>

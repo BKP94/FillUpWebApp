@@ -28,11 +28,54 @@ describe('IndexedDB repository', () => {
     await repo.saveVehicle(vehicle)
     await repo.saveVehicle({ ...vehicle, id: '22222222-2222-4222-8222-222222222222' })
     await repo.saveRecord(record(10000, 5, true, 1))
-    await repo.deleteVehicle(vehicle.id)
+    await repo.deleteVehicle(vehicle.id, {
+      updatedAt: vehicle.updatedAt,
+      records: (await repo.read()).records,
+    })
     const data = await repo.read()
     expect(data.records).toEqual([])
     expect(data.settings.activeVehicleId).toBe(data.vehicles[0]?.id)
   })
+  it.each(['add', 'edit', 'replace', 'vehicle edit'] as const)(
+    'rejects stale vehicle deletion after another connection performs %s',
+    async (change) => {
+      const name = `concurrent-${crypto.randomUUID()}`
+      const first = new Repository(name)
+      const second = new Repository(name)
+      try {
+        await first.saveVehicle(vehicle)
+        const fill = record(10000, 5, true, 1)
+        await first.saveRecord(fill)
+        const snapshot = { updatedAt: vehicle.updatedAt, records: [fill] }
+        if (change === 'vehicle edit') {
+          await second.saveVehicle(
+            { ...vehicle, name: 'ชื่อรถใหม่', updatedAt: '2026-09-02T12:00:00.000Z' },
+            vehicle.updatedAt,
+          )
+        } else if (change === 'edit') {
+          await second.saveRecord(
+            { ...fill, notes: 'แก้จากอีกแท็บ', updatedAt: '2026-09-02T12:00:00.000Z' },
+            fill.updatedAt,
+          )
+        } else {
+          if (change === 'replace') await second.deleteRecord(fill.id, fill.updatedAt)
+          await second.saveRecord(record(10300, 10, true, 2))
+        }
+        const current = await second.read()
+        await expect(first.deleteVehicle(vehicle.id, snapshot)).rejects.toThrow('เปลี่ยนแปลง')
+        expect(await first.read()).toEqual(current)
+        await first.deleteVehicle(vehicle.id, {
+          updatedAt: current.vehicles[0]!.updatedAt,
+          records: current.records,
+        })
+        expect((await first.read()).vehicles).toEqual([])
+        expect((await first.read()).records).toEqual([])
+      } finally {
+        await first.close()
+        await second.close()
+      }
+    },
+  )
   it('does not allow an edited refill to change its vehicle', async () => {
     await repo.saveVehicle(vehicle)
     const other = { ...vehicle, id: '22222222-2222-4222-8222-222222222222' }

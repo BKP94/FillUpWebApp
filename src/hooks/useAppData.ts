@@ -35,7 +35,12 @@ export function useAppData() {
     }
     window.addEventListener('fillup-changed', changed)
     window.addEventListener('focus', changed)
+    const visible = () => {
+      if (document.visibilityState === 'visible') changed()
+    }
+    document.addEventListener('visibilitychange', visible)
     return () => {
+      document.removeEventListener('visibilitychange', visible)
       window.removeEventListener('fillup-changed', changed)
       window.removeEventListener('focus', changed)
     }

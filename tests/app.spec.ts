@@ -206,8 +206,12 @@ test('editing remains attached to the original vehicle when another tab switches
   await page.getByRole('button', { name: 'แก้ไขรายการ' }).click()
   const other = await context.newPage()
   await other.goto('/')
+  // Wait for the second tab to load before switching, then compare by label: the controlled select
+  // briefly reverts to the old value until the IndexedDB write settles.
+  await expect(other.getByLabel('รถที่ใช้งาน').locator('option:checked')).toHaveText('รถคู่ใจ')
   await other.getByLabel('รถที่ใช้งาน').selectOption({ label: 'รถคันที่สอง' })
-  await expect(page.getByLabel('รถที่ใช้งาน')).toHaveValue(await other.getByLabel('รถที่ใช้งาน').inputValue())
+  await expect(other.getByLabel('รถที่ใช้งาน').locator('option:checked')).toHaveText('รถคันที่สอง')
+  await expect(page.getByLabel('รถที่ใช้งาน').locator('option:checked')).toHaveText('รถคันที่สอง')
   await page.getByLabel('หมายเหตุ').fill('รายการยังเป็นของรถคู่ใจ')
   await page.getByRole('button', { name: 'บันทึกการเติม', exact: true }).click()
   await expect(page.getByRole('dialog')).toBeHidden()
@@ -217,6 +221,69 @@ test('editing remains attached to the original vehicle when another tab switches
   await page.locator('.history-group .record-row').click()
   await expect(page.getByText('รายการยังเป็นของรถคู่ใจ', { exact: true })).toBeVisible()
   await other.close()
+})
+
+test('vehicle deletion rejects a stale confirmation and requires a fresh review', async ({
+  page,
+  context,
+}) => {
+  await page.goto('/')
+  await createVehicle(page)
+  await fillUp(page, '01', '10000', '8')
+  await navigate(page, 'รถของฉัน')
+  await page.getByRole('button', { name: 'ลบ รถคู่ใจ', exact: true }).click()
+  await expect(page.getByRole('dialog')).toContainText('1 รายการ')
+
+  const other = await context.newPage()
+  await other.goto('/')
+  await fillUp(other, '02', '10300', '10')
+  await navigate(other, 'ประวัติ')
+  await expect(other.locator('.history-group .record-row')).toHaveCount(2)
+  await page.getByRole('button', { name: 'ยืนยันการลบ', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('ยังไม่ได้ลบข้อมูล')
+  await other.reload()
+  await navigate(other, 'ประวัติ')
+  await expect(other.locator('.history-group .record-row')).toHaveCount(2)
+
+  await page.getByRole('button', { name: 'ยกเลิก', exact: true }).click()
+  await page.getByRole('button', { name: 'ลบ รถคู่ใจ', exact: true }).click()
+  await expect(page.getByRole('dialog')).toContainText('2 รายการ')
+  await page.getByRole('button', { name: 'ยืนยันการลบ', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'เพิ่มรถคันแรกของคุณ' })).toBeVisible()
+  await other.reload()
+  await expect(other.getByRole('heading', { name: 'เพิ่มรถคันแรกของคุณ' })).toBeVisible()
+  await other.close()
+})
+
+test('a saved three-digit year remains viewable in history and statistics and can be corrected', async ({
+  page,
+}) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await page.goto('/')
+  await createVehicle(page)
+  await page.getByRole('button', { name: 'เติมน้ำมัน', exact: true }).filter({ visible: true }).click()
+  await page.getByLabel('วันที่และเวลา').fill('0206-09-04T12:00')
+  await page.getByLabel('เลขไมล์ (km)', { exact: true }).fill('10000')
+  await page.getByLabel('ปริมาณน้ำมัน (L)').fill('8')
+  await page.getByLabel('ราคาต่อลิตร (฿/L)').fill('35')
+  await page.getByRole('button', { name: 'บันทึกการเติม', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeHidden()
+  await page.reload()
+  await navigate(page, 'ประวัติ')
+  await page.getByLabel('กรองตามเดือน').selectOption('0206-09')
+  await expect(page.locator('.history-group .record-row')).toHaveCount(1)
+  await navigate(page, 'สถิติ')
+  await expect(page.getByRole('img', { name: 'ค่าใช้จ่ายรายเดือน', exact: true })).toBeVisible()
+  await navigate(page, 'ประวัติ')
+  await page.locator('.history-group .record-row').click()
+  await page.getByRole('button', { name: 'แก้ไขรายการ' }).click()
+  await page.getByLabel('วันที่และเวลา').fill('2026-09-04T12:00')
+  await page.getByRole('button', { name: 'บันทึกการเติม', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeHidden()
+  await page.getByLabel('กรองตามเดือน').selectOption('2026-09')
+  await expect(page.locator('.history-group .record-row')).toHaveCount(1)
+  expect(errors).toEqual([])
 })
 
 test('reverse price calculation, unusual-value confirmation, iOS hint persistence', async ({

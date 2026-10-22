@@ -16,7 +16,7 @@ import { Statistics } from './pages/Statistics'
 import { Vehicles } from './pages/Vehicles'
 import { Settings } from './pages/Settings'
 import { Onboarding } from './pages/Onboarding'
-import { Sidebar, Topbar, BottomNav, PageFooter, type Page } from './components/AppLayout'
+import { Sidebar, Topbar, BottomNav, PageFooter, pageLabel, type Page } from './components/AppLayout'
 
 type Editor =
   | { type: 'vehicle'; vehicle?: Vehicle }
@@ -54,6 +54,9 @@ export default function App() {
     return () => media.removeEventListener('change', update)
   }, [data.settings.theme])
   useEffect(() => {
+    document.title = active ? `${pageLabel(page)} · FillUp` : 'FillUp · บันทึกการเติมน้ำมัน'
+  }, [page, active])
+  useEffect(() => {
     if (!toast) return
     const timer = window.setTimeout(() => setToast(''), 4500)
     return () => window.clearTimeout(timer)
@@ -82,15 +85,18 @@ export default function App() {
     if (!active) navigate('dashboard')
     setToast('บันทึกข้อมูลรถแล้ว')
   }
-  const removeVehicle = (vehicle: Vehicle) =>
+  const removeVehicle = (vehicle: Vehicle) => {
+    const records = data.records.filter((record) => record.vehicleId === vehicle.id)
+    const expected = { updatedAt: vehicle.updatedAt, records }
     setConfirmation({
       title: `ลบ ${vehicle.name}?`,
-      description: `ประวัติการเติมน้ำมันทั้งหมด ${data.records.filter((record) => record.vehicleId === vehicle.id).length} รายการของรถคันนี้จะถูกลบด้วย ไม่สามารถย้อนกลับได้`,
+      description: `ประวัติการเติมน้ำมันทั้งหมด ${records.length} รายการของรถคันนี้จะถูกลบด้วย ไม่สามารถย้อนกลับได้`,
       action: async () => {
-        await mutate(() => repository.deleteVehicle(vehicle.id))
+        await mutate(() => repository.deleteVehicle(vehicle.id, expected))
         setToast('ลบรถและประวัติแล้ว')
       },
     })
+  }
   const removeRecord = (record: FuelRecord) => {
     setEditor(null)
     setConfirmation({
@@ -110,18 +116,18 @@ export default function App() {
   if (loading)
     return (
       <div className="loading-screen">
-        <span className="brand-mark">
+        <span className="brand-mark" aria-hidden="true">
           <Fuel />
         </span>
         <h1>FillUp</h1>
-        <LoaderCircle className="spin" />
+        <LoaderCircle className="spin" aria-hidden="true" />
         <p>กำลังเปิดสมุดบันทึกของคุณ…</p>
       </div>
     )
   if (error)
     return (
       <div className="loading-screen">
-        <ShieldCheck size={40} />
+        <ShieldCheck size={36} aria-hidden="true" />
         <h1>เปิดข้อมูลไม่สำเร็จ</h1>
         <p className="error">{error}</p>
         <p>ตรวจสอบสิทธิ์จัดเก็บข้อมูลของเบราว์เซอร์ แล้วลองอีกครั้ง ข้อมูลเดิมจะไม่ถูกลบ</p>
@@ -161,7 +167,7 @@ export default function App() {
                 onClick={() => setActionError('')}
                 aria-label="ปิดข้อความผิดพลาด"
               >
-                <X size={18} />
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
           )}
@@ -179,7 +185,7 @@ export default function App() {
                   void pwa.updateServiceWorker(true).catch((error) => setActionError(errorMessage(error)))
                 }}
               >
-                อัปเดตตอนนี้ <ArrowUpRight size={17} />
+                อัปเดตตอนนี้ <ArrowUpRight size={17} aria-hidden="true" />
               </button>
             </div>
           )}
@@ -241,7 +247,7 @@ export default function App() {
           )}
           {isIOS && isSafari && !standalone && !data.settings.dismissedInstallHint && (
             <div className="install-hint">
-              <Smartphone size={26} />
+              <Smartphone size={22} aria-hidden="true" />
               <div>
                 <strong>ติดตั้ง FillUp บน iPhone</strong>
                 <p>กด Share → “เพิ่มไปยังหน้าจอโฮม” → “เพิ่ม”</p>
@@ -253,7 +259,7 @@ export default function App() {
                   void run(() => repository.updateSettings({ dismissedInstallHint: true }))
                 }}
               >
-                <X size={19} />
+                <X size={19} aria-hidden="true" />
               </button>
             </div>
           )}
@@ -305,12 +311,14 @@ export default function App() {
         </Modal>
       )}
       {confirmation && <ConfirmDialog confirmation={confirmation} onClose={() => setConfirmation(null)} />}
-      {toast && (
-        <div className="toast" role="status">
-          <Check size={18} />
-          <span>{toast}</span>
-        </div>
-      )}
+      <div className="toast-region" role="status" aria-live="polite">
+        {toast && (
+          <div className="toast">
+            <Check size={18} aria-hidden="true" />
+            <span>{toast}</span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

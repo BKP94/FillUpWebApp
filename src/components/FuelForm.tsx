@@ -111,9 +111,7 @@ export function FuelForm({
     >
       <div className="modal-body form-content">
         <div className="form-intro">
-          <span className="small-icon">
-            <Fuel size={21} />
-          </span>
+          <Fuel size={18} aria-hidden="true" />
           <p>
             {vehicle.name}
             <span>
@@ -248,7 +246,7 @@ export function FuelForm({
         {pending && (
           <div className="warning" role="alert">
             <strong>
-              <TriangleAlert size={17} /> ตรวจสอบก่อนบันทึก
+              <TriangleAlert size={17} aria-hidden="true" /> ตรวจสอบก่อนบันทึก
             </strong>
             {pending.warnings.map((warning) => (
               <p key={warning}>{warning}</p>

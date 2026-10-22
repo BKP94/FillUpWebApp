@@ -18,9 +18,22 @@ const navigation = [
   { id: 'settings', label: 'ตั้งค่า', icon: SettingsIcon },
 ] as const
 export type Page = (typeof navigation)[number]['id']
+export const pageLabel = (page: Page) => navigation.find((item) => item.id === page)?.label ?? ''
 interface NavigationProps {
   page: Page
   navigate: (page: Page) => void
+}
+function Wordmark({ size = 20 }: { size?: number }) {
+  return (
+    <>
+      <span className="brand-mark" aria-hidden="true">
+        <Fuel size={size} strokeWidth={2.2} />
+      </span>
+      <span className="brand-word">
+        FillUp<span className="brand-dot">.</span>
+      </span>
+    </>
+  )
 }
 export function Sidebar({ page, navigate }: NavigationProps) {
   return (
@@ -33,38 +46,30 @@ export function Sidebar({ page, navigate }: NavigationProps) {
           navigate('dashboard')
         }}
       >
-        <span className="brand-mark">
-          <Fuel size={25} />
-        </span>
-        <span>
-          FillUp<span className="brand-dot">.</span>
-        </span>
+        <Wordmark />
       </a>
-      <div className="sidebar-caption">ทุกถังมีความหมาย</div>
       <nav aria-label="เมนูหลัก">
-        {navigation.map((item) => (
+        {navigation.map((item, index) => (
           <button
             key={item.id}
             className={page === item.id ? 'active' : ''}
             onClick={() => navigate(item.id)}
             aria-current={page === item.id ? 'page' : undefined}
           >
-            <item.icon size={21} />
+            <span className="nav-index" aria-hidden="true">
+              0{index + 1}
+            </span>
+            <item.icon size={19} aria-hidden="true" />
             <span>{item.label}</span>
-            {page === item.id && <span className="nav-dot" />}
           </button>
         ))}
       </nav>
       <div className="sidebar-bottom">
-        <div className="local-note">
-          <ShieldCheck size={20} />
-          <span>
-            ส่วนตัว ปลอดภัย
-            <br />
-            <small>ข้อมูลอยู่กับคุณเสมอ</small>
-          </span>
-        </div>
-        <span className="version">FILLUP / VERSION 1.0</span>
+        <ShieldCheck size={18} aria-hidden="true" />
+        <span>
+          ข้อมูลอยู่ในเครื่องนี้
+          <small>ไม่มีบัญชี ไม่มีการติดตาม</small>
+        </span>
       </div>
     </aside>
   )
@@ -87,24 +92,17 @@ export function Topbar({
   return (
     <header className="topbar">
       <div className="mobile-brand">
-        <span className="brand-mark">
-          <Fuel size={20} />
-        </span>
-        FillUp<span className="brand-dot">.</span>
+        <Wordmark size={17} />
       </div>
-      <div className="breadcrumb">
-        พื้นที่ของคุณ <span>/</span> <strong>{navigation.find((item) => item.id === page)?.label}</strong>
-      </div>
+      <div className="topbar-title">{pageLabel(page)}</div>
       <div className="topbar-right">
         <span className={`connection ${!online ? 'offline' : ''}`}>
-          {online ? <span className="status-dot" /> : <WifiOff size={14} />}
+          {online ? <span className="status-dot" aria-hidden="true" /> : <WifiOff size={15} />}
           <span>{!online ? 'ออฟไลน์' : offlineReady ? 'พร้อมใช้ออฟไลน์' : 'เก็บข้อมูลในเครื่อง'}</span>
         </span>
         {active && (
           <label className="vehicle-selector">
-            <span className="selector-icon">
-              <CarFront size={18} />
-            </span>
+            <CarFront size={18} aria-hidden="true" />
             <select
               aria-label="รถที่ใช้งาน"
               value={active.id}
@@ -118,7 +116,7 @@ export function Topbar({
                 </option>
               ))}
             </select>
-            <ChevronDown size={15} />
+            <ChevronDown size={16} aria-hidden="true" />
           </label>
         )}
       </div>
@@ -135,7 +133,7 @@ export function BottomNav({ page, navigate }: NavigationProps) {
           onClick={() => navigate(item.id)}
           aria-current={page === item.id ? 'page' : undefined}
         >
-          <item.icon size={22} strokeWidth={page === item.id ? 2.3 : 1.8} />
+          <item.icon size={22} strokeWidth={page === item.id ? 2.3 : 1.8} aria-hidden="true" />
           <span>{item.label}</span>
         </button>
       ))}
@@ -145,9 +143,9 @@ export function BottomNav({ page, navigate }: NavigationProps) {
 export function PageFooter() {
   return (
     <footer className="page-footer">
-      <span>FillUp — ทำให้ทุกถังคุ้มค่า</span>
+      <span>FillUp 1.0 · ทำให้ทุกถังคุ้มค่า</span>
       <span>
-        <ShieldCheck size={13} /> สร้างมาเพื่อความเป็นส่วนตัว
+        <ShieldCheck size={14} aria-hidden="true" /> สร้างมาเพื่อความเป็นส่วนตัว
       </span>
     </footer>
   )

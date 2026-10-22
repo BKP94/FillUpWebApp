@@ -3,7 +3,7 @@ import { Search, Plus, History as HistoryIcon } from 'lucide-react'
 import type { FuelRecord } from '../models'
 import { statistics, chronological } from '../services/calculations'
 import { baht, monthKey, monthLabel } from '../utils/format'
-import { EmptyState, RecordRow } from '../components/Common'
+import { EmptyState, PageHeading, RecordRow } from '../components/Common'
 
 export function History({
   records,
@@ -29,22 +29,18 @@ export function History({
   const economies = new Map(statistics(records).intervals.map((item) => [item.recordId, item.kmPerLiter]))
   return (
     <>
-      <div className="page-heading">
-        <div>
-          <div className="eyebrow">ย้อนดูทุกการเดินทาง</div>
-          <h1>
-            ประวัติการเติม<span className="heading-dot">.</span>
-          </h1>
-          <p>ทุกรายการ ครบในที่เดียว · {records.length} ครั้ง</p>
-        </div>
-        <button className="button primary" onClick={addFuel}>
-          <Plus size={18} /> เติมน้ำมัน
+      <PageHeading
+        title="ประวัติการเติม"
+        description={`ทุกรายการ ครบในที่เดียว · ${records.length} ครั้ง`}
+      >
+        <button className="button signal" onClick={addFuel}>
+          <Plus size={18} aria-hidden="true" /> เติมน้ำมัน
         </button>
-      </div>
+      </PageHeading>
       {!!records.length && (
         <div className="filter-bar">
           <label className="search-field">
-            <Search size={19} />
+            <Search size={19} aria-hidden="true" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -67,7 +63,7 @@ export function History({
         </div>
       )}
       {!visible.length ? (
-        <section className="card">
+        <section className="panel">
           <EmptyState
             icon={HistoryIcon}
             title={records.length ? 'ไม่พบรายการที่ค้นหา' : 'ยังไม่มีประวัติการเติม'}
@@ -89,18 +85,21 @@ export function History({
         </section>
       ) : (
         groups.map((month) => (
-          <section key={month} className="history-group">
-            <div className="section-heading">
+          <section key={month} className="history-group" aria-label={monthLabel(month)}>
+            <div className="ledger-heading">
               <h2>{monthLabel(month)}</h2>
               <span>
-                {baht(
-                  visible
-                    .filter((record) => monthKey(record.date) === month)
-                    .reduce((sum, record) => sum + record.totalCost, 0),
-                )}
+                {visible.filter((record) => monthKey(record.date) === month).length} ครั้ง ·{' '}
+                <strong>
+                  {baht(
+                    visible
+                      .filter((record) => monthKey(record.date) === month)
+                      .reduce((sum, record) => sum + record.totalCost, 0),
+                  )}
+                </strong>
               </span>
             </div>
-            <div className="card">
+            <div className="panel ledger">
               {visible
                 .filter((record) => monthKey(record.date) === month)
                 .map((record) => (
